@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Math Practice Drills</title>
+
+  <!-- ✅ Фигурный шрифт (весь проект) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* ✅ ГДЕ ПОМЕНЯТЬ ФОН СТРАНИЦЫ:
+       просто замени путь на свою картинку (у тебя сейчас images/winter-arena.png) */
+    :root{
+      --BACKGROUND_IMAGE: url('images/winter-arena.png');
+      --OVERLAY_WHITE: rgba(255,255,255,0.30);
+
+      --btnShadow: 0 10px 18px rgba(0,0,0,.16), 0 3px 0 rgba(0,0,0,.14);
+      --btnInner: inset 0 1px 0 rgba(255,255,255,.50), inset 0 -10px 18px rgba(0,0,0,.08);
+    }
+
+    html, body { height: 100%; }
+
+    body {
+      font-family: 'Cinzel Decorative', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; /* ✅ весь шрифт */
+      color: #0f172a;
+      line-height: 1.25;
+      overflow: hidden;             /* ✅ игра строго в пределах экрана */
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: var(--BACKGROUND_IMAGE) no-repeat center center;
+      background-size: cover;
+      z-index: -2;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: var(--OVERLAY_WHITE);
+      z-index: -1;
+    }
+
+    .lang-toggle {
+      position: fixed;
+      top: 14px;
+      right: 14px;
+      border: none;
+      border-radius: 12px;
+      padding: 9px 14px;
+      cursor: pointer;
+      z-index: 20;
+
+      color: #fff;
+      background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%);
+      box-shadow: var(--btnShadow), var(--btnInner);
+      text-shadow: 0 1px 0 rgba(0,0,0,.25);
+      transform: translateZ(0);
+    }
+    .lang-toggle:active { transform: translateY(2px); box-shadow: 0 6px 12px rgba(0,0,0,.18), 0 2px 0 rgba(0,0,0,.14); }
+
+    .app {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 14px;
+    }
+
+    .container {
+      width: min(900px, 96vw);
+      height: min(940px, 96vh);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+
+      text-align: center;
+      background: rgba(255, 255, 255, 0.94);
+      border-radius: 18px;
+      padding: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.14);
+      position: relative;
+      z-index: 2;
+      min-width: 0;
+      overflow-x: hidden;
+      overflow-y: auto;
+      backdrop-filter: blur(2px);
+    }
+
+    /* 🛡️ Hogwarts crests row */
+    .house-row{
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 2px 0 0;
+      flex: 0 0 auto;
+    }
+    .house-badge{
+      width: 102px;
+      height: 102px;
+      border-radius: 14px;
+      background: rgba(255,255,255,.70);
+      box-shadow: 0 6px 14px rgba(0,0,0,.12), inset 0 1px 0 rgba(255,255,255,.55);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+    }
+    .house-badge img{
+      width: 102px;
+      height: 102px;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,.25));
+    }
+
+    .header { flex: 0 0 auto; padding: 2px 6px 4px; }
+    h1 { font-size: clamp(1.55rem, 2.6vw, 2.1rem); margin: 6px 0 4px; }
+    .subtitle { font-size: 1.05rem; color: #334155; opacity: .85; }
+
+    .content {
+      flex: 1 1 auto;
+      display: grid;
+      grid-template-rows: auto 1fr;
+      gap: 12px;
+      min-height: 0;
+    }
+
+    .section {
+      background: rgba(255,255,255,.96);
+      border-radius: 16px;
+      padding: 14px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.06);
+      min-height: 0;
+    }
+
+    .section.play {
+      display: grid;
+      grid-template-rows: auto auto auto auto auto;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .controls label {
+      font-size: 0.95rem;
+      color: #334155;
+      margin-bottom: 4px;
+      display: block;
+      font-weight: 700;
+      text-align: left;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    /* ✅ Объёмные “блестящие” кнопки */
+    button {
+      position: relative;
+      padding: 10px 16px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      min-width: 108px;
+
+      box-shadow: var(--btnShadow), var(--btnInner);
+      transform: translateZ(0);
+      transition: transform .12s ease, filter .12s ease;
+      user-select: none;
+    }
+    button::before{
+      content:'';
+      position:absolute;
+      left: 10%;
+      right: 10%;
+      top: 6px;
+      height: 42%;
+      border-radius: 12px;
+      background: linear-gradient(180deg, rgba(255,255,255,.55) 0%, rgba(255,255,255,0) 100%);
+      pointer-events:none;
+      opacity: .85;
+    }
+    button:active{
+      transform: translateY(2px);
+      filter: brightness(.98);
+      box-shadow: 0 6px 12px rgba(0,0,0,.18), 0 2px 0 rgba(0,0,0,.14), inset 0 1px 0 rgba(255,255,255,.45);
+    }
+    button:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    #startBtn {
+      color: #fff;
+      background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+      text-shadow: 0 1px 0 rgba(0,0,0,.22);
+    }
+    #resetBtn {
+      color: #fff;
+      background: linear-gradient(180deg, #fb7185 0%, #dc2626 100%);
+      text-shadow: 0 1px 0 rgba(0,0,0,.22);
+    }
+
+    .diff-btn, .op-btn, .time-btn {
+      background: linear-gradient(180deg, #f1f5f9 0%, #cbd5e1 100%);
+      color: #0f172a;
+      text-shadow: 0 1px 0 rgba(255,255,255,.45);
+    }
+    .diff-btn.active, .op-btn.active, .time-btn.active {
+      background: linear-gradient(180deg, #93c5fd 0%, #2563eb 100%);
+      color: white;
+      text-shadow: 0 1px 0 rgba(0,0,0,.25);
+    }
+    .op-btn { min-width: 50px; }
+    #btn-op-all { min-width: 76px; }
+
+    #timer {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #b45309;
+      background: linear-gradient(180deg, #fff7ed 0%, #fde68a 100%);
+      padding: 8px 16px;
+      border-radius: 12px;
+      display: inline-block;
+      justify-self: center;
+      box-shadow: 0 8px 16px rgba(0,0,0,.10), inset 0 1px 0 rgba(255,255,255,.65);
+    }
+
+    #problem {
+      font-size: clamp(1.7rem, 3vw, 2.35rem);
+      font-weight: 700;
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(248,250,252,.95);
+      border-radius: 14px;
+      padding: 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.70), 0 6px 14px rgba(0,0,0,.06);
+    }
+
+    .answer-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    #rightBtn, #wrongBtn {
+      padding: 12px 18px;
+      font-size: 1.08rem;
+      width: min(250px, 44vw);
+    }
+    #rightBtn {
+      color: #fff;
+      background: linear-gradient(180deg, #34d399 0%, #059669 100%);
+      text-shadow: 0 1px 0 rgba(0,0,0,.22);
+    }
+    #wrongBtn {
+      color: #fff;
+      background: linear-gradient(180deg, #fb7185 0%, #dc2626 100%);
+      text-shadow: 0 1px 0 rgba(0,0,0,.22);
+    }
+
+    .stats {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .stat-item {
+      background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      padding: 10px 14px;
+      border-radius: 12px;
+      min-width: 110px;
+      box-shadow: 0 10px 16px rgba(0,0,0,.06), inset 0 1px 0 rgba(255,255,255,.7);
+    }
+    .stat-label { font-size: 0.9rem; color: #334155; display: block; opacity: .85; }
+    .stat-value { font-size: 1.45rem; font-weight: 700; }
+
+    .section.history {
+      display: flex;
+      flex-direction: column;
+      min-height: 130px;
+    }
+    .section.history h2 {
+      font-size: 1.15rem;
+      margin-bottom: 8px;
+      flex: 0 0 auto;
+      text-align: left;
+    }
+    #results {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 10px 12px;
+      background: rgba(248,250,252,.95);
+      border-radius: 12px;
+      border: 1px solid rgba(226,232,240,.9);
+      font-size: 0.98rem;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.65);
+    }
+    .result-line { padding: 6px 0; border-bottom: 1px solid rgba(226,232,240,0.7); }
+    .result-line:last-child { border-bottom: none; }
+    .correct { color: #047857; }
+    .incorrect { color: #b91c1c; }
+
+    /* ❄ Snow */
+    .snowflake {
+      position: fixed;
+      top: -12vh;
+      z-index: 1;
+      pointer-events: none;
+      color: rgba(255,255,255,0.95);
+      text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+      will-change: transform;
+      animation-name: snowfall;
+      animation-timing-function: linear;
+      animation-iteration-count: infinite;
+    }
+    @keyframes snowfall {
+      0%   { transform: translate3d(var(--x, 0vw), -12vh, 0) rotate(0deg); }
+      100% { transform: translate3d(calc(var(--x, 0vw) + var(--drift, 0vw)), 110vh, 0) rotate(360deg); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .snowflake { animation: none !important; }
+    }
+
+    /* ✅ Если экран очень низкий — прячем гербы, чтобы всё помещалось */
+    @media (max-height: 700px) {
+      .house-row { display: none; }
+      .subtitle { display: none; }
+      .container { height: 98vh; }
+    }
+    @media (max-width: 600px) {
+      .app { padding: 56px 8px 8px; }
+      .container { width: 100%; height: 100%; padding: 10px; }
+      .house-row { gap: 6px; }
+      .house-badge { width: 19vw; height: 19vw; flex: 0 0 19vw; }
+      .house-badge img { width: 100%; height: 100%; object-fit: contain; }
+      .content { flex: 0 0 auto; grid-template-rows: auto minmax(130px, auto); }
+      .section.play { min-height: max-content; }
+      .btn-group { gap: 6px; }
+      .diff-btn, .time-btn { min-width: 86px; }
+      .op-btn { min-width: 44px; padding: 10px; }
+      #btn-op-all { min-width: 64px; }
+      #rightBtn, #wrongBtn { width: calc(50% - 6px); min-width: 0; padding: 12px 8px; }
+      .stats { flex-wrap: nowrap; gap: 6px; }
+      .stat-item { flex: 1 1 0; min-width: 0; padding: 8px 4px; }
+      .stat-label { font-size: .72rem; }
+      .stat-value { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+
+<body>
+  <button id="langToggle" class="lang-toggle">🇷🇺 Русский</button>
+
+  <!-- ❄ Snowflakes (инициализация отложена до DOMContentLoaded) -->
+  <div class="app">
+    <div class="container">
+      <!-- 🛡️ 4 герба домов -->
+      <div class="house-row" aria-label="Hogwarts Houses">
+        <div class="house-badge" title="Гриффиндор">
+          <img alt="Гриффиндор" src="images/gryffindor.png">
+        </div>
+        <div class="house-badge" title="Слизерин">
+          <img alt="Слизерин" src="images/slytherin.png">
+        </div>
+        <div class="house-badge" title="Хаффлпафф">
+          <img alt="Хаффлпафф" src="images/hufflepuff.png">
+        </div>
+        <div class="house-badge" title="Рэйвенкло">
+          <img alt="Рэйвенкло" src="images/ravenclaw.png">
+        </div>
+      </div>
+
+      <div class="header">
+        <h1 id="title">Math Practice Drills</h1>
+        <p id="subtitle" class="subtitle">Train your math intuition — Right or Wrong?</p>
+      </div>
+
+      <div class="content">
+        <div class="section play">
+          <div class="controls">
+            <div>
+              <label id="label-level">Difficulty</label>
+              <div class="btn-group">
+                <button class="diff-btn active" data-level="easy" id="btn-easy">Easy</button>
+                <button class="diff-btn" data-level="medium" id="btn-medium">Medium</button>
+                <button class="diff-btn" data-level="hard" id="btn-hard">Hard</button>
+              </div>
+            </div>
+
+            <div>
+              <label id="label-operation">Operation</label>
+              <div class="btn-group" role="group" aria-labelledby="label-operation">
+                <button class="op-btn active" data-operation="all" id="btn-op-all" aria-pressed="true">All</button>
+                <button class="op-btn" data-operation="+" id="btn-op-add" aria-pressed="false">+</button>
+                <button class="op-btn" data-operation="-" id="btn-op-subtract" aria-pressed="false">−</button>
+                <button class="op-btn" data-operation="*" id="btn-op-multiply" aria-pressed="false">×</button>
+                <button class="op-btn" data-operation="/" id="btn-op-divide" aria-pressed="false">÷</button>
+              </div>
+            </div>
+
+            <div>
+              <label id="label-time">Duration</label>
+              <div class="btn-group">
+                <button class="time-btn" data-seconds="30" id="btn-30">30 s</button>
+                <button class="time-btn active" data-seconds="60" id="btn-60">60 s</button>
+                <button class="time-btn" data-seconds="90" id="btn-90">90 s</button>
+              </div>
+            </div>
+
+            <div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:end;">
+              <button id="startBtn">Start Quiz</button>
+              <button id="resetBtn">Reset</button>
+            </div>
+          </div>
+
+          <div id="timer">60</div>
+          <div id="problem">—</div>
+
+          <div class="answer-buttons">
+            <button id="rightBtn" disabled>✅ Right</button>
+            <button id="wrongBtn" disabled>❌ Wrong</button>
+          </div>
+
+          <div class="stats">
+            <div class="stat-item">
+              <span class="stat-label" id="label-correct">Correct</span>
+              <span class="stat-value" id="correct">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label" id="label-incorrect">Incorrect</span>
+              <span class="stat-value" id="incorrect">0</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label" id="label-total">Total</span>
+              <span class="stat-value" id="total">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section history">
+          <h2 id="history-title">Answer History</h2>
+          <div id="results">
+            <div class="result-line">Start the quiz to see history</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // ❄ Snowflakes — генерация после загрузки DOM
+    document.addEventListener('DOMContentLoaded', () => {
+      const count = 45;
+      for (let i = 0; i < count; i++) {
+        const snow = document.createElement('div');
+        snow.className = 'snowflake';
+        snow.textContent = '❄';
+
+        snow.style.setProperty('--x', `${Math.random() * 100}vw`);
+        snow.style.setProperty('--drift', `${(Math.random() * 18 - 9).toFixed(2)}vw`);
+
+        snow.style.opacity = `${0.35 + Math.random() * 0.6}`;
+        snow.style.fontSize = `${0.7 + Math.random() * 1.1}rem`;
+
+        snow.style.animationDuration = `${7 + Math.random() * 13}s`;
+        snow.style.animationDelay = `${Math.random() * 5}s`;
+
+        document.body.appendChild(snow);
+      }
+
+      // === 🧙‍♂️ ВЕСЬ ОСНОВНОЙ КОД — только после полной загрузки DOM ===
+      const EASY_PROBLEMS_EN = [];
+      for (let a = 1; a <= 12; a++) {
+        for (let b = 1; b <= 12; b++) {
+          const sum = a + b;
+          if (sum >= 1 && sum <= 12) EASY_PROBLEMS_EN.push({ a, b, op: '+', answer: sum });
+          const diff = a - b;
+          if (diff >= 1 && diff <= 12) EASY_PROBLEMS_EN.push({ a, b, op: '-', answer: diff });
+        }
+      }
+
+      const LOCALE = {
+        en: {
+          title: "Math Practice Drills",
+          subtitle: "Train your math intuition — Right or Wrong?",
+          labelLevel: "Difficulty",
+          labelOperation: "Operation",
+          labelTime: "Duration",
+          labelCorrect: "Correct",
+          labelIncorrect: "Incorrect",
+          labelTotal: "Total",
+          historyTitle: "Answer History",
+          btnEasy: "Easy",
+          btnMedium: "Medium",
+          btnHard: "Hard",
+          btnAll: "All",
+          btn30: "30 s",
+          btn60: "60 s",
+          btn90: "90 s",
+          startBtn: "Start Quiz",
+          resetBtn: "Reset",
+          rightBtn: "✅ Right",
+          wrongBtn: "❌ Wrong",
+          resultStart: "Start the quiz to see history",
+          resultCorrect: " = {ans}",
+          resultIncorrect: " = {ans} (you chose Wrong)",
+          langToggle: "🇷🇺 Русский"
+        },
+        ru: {
+          title: "Тренировка математики",
+          subtitle: "Оценивайте — Верно или Неверно — и развивайте интуицию",
+          labelLevel: "Уровень",
+          labelOperation: "Действие",
+          labelTime: "Время",
+          labelCorrect: "Правильно",
+          labelIncorrect: "Неправильно",
+          labelTotal: "Всего",
+          historyTitle: "История решений",
+          btnEasy: "Лёгкий",
+          btnMedium: "Средний",
+          btnHard: "Сложный",
+          btnAll: "Все",
+          btn30: "30 с",
+          btn60: "60 с",
+          btn90: "90 с",
+          startBtn: "Начать квиз",
+          resetBtn: "Сбросить",
+          rightBtn: "✅ Верно",
+          wrongBtn: "❌ Неверно",
+          resultStart: "Начните квиз, чтобы увидеть историю",
+          resultCorrect: " = {ans}",
+          resultIncorrect: " = {ans} (вы выбрали «Неверно»)",
+          langToggle: "🇬🇧 English"
+        }
+      };
+
+      const langToggle = document.getElementById('langToggle');
+      const titleEl = document.getElementById('title');
+      const subtitleEl = document.getElementById('subtitle');
+      const labelLevelEl = document.getElementById('label-level');
+      const labelOperationEl = document.getElementById('label-operation');
+      const labelTimeEl = document.getElementById('label-time');
+      const labelCorrectEl = document.getElementById('label-correct');
+      const labelIncorrectEl = document.getElementById('label-incorrect');
+      const labelTotalEl = document.getElementById('label-total');
+      const historyTitleEl = document.getElementById('history-title');
+      const btnEasy = document.getElementById('btn-easy');
+      const btnMedium = document.getElementById('btn-medium');
+      const btnHard = document.getElementById('btn-hard');
+      const opButtons = [...document.querySelectorAll('.op-btn')];
+      const btnOpAll = document.getElementById('btn-op-all');
+      const btn30 = document.getElementById('btn-30');
+      const btn60 = document.getElementById('btn-60');
+      const btn90 = document.getElementById('btn-90');
+      const startBtn = document.getElementById('startBtn');
+      const resetBtn = document.getElementById('resetBtn');
+      const rightBtn = document.getElementById('rightBtn');
+      const wrongBtn = document.getElementById('wrongBtn');
+      const problemEl = document.getElementById('problem');
+      const timerEl = document.getElementById('timer');
+      const correctEl = document.getElementById('correct');
+      const incorrectEl = document.getElementById('incorrect');
+      const totalEl = document.getElementById('total');
+      const resultsEl = document.getElementById('results');
+
+      let lang = 'en';
+      let level = 'easy';
+      let operation = 'all';
+      let duration = 60;
+      let timer = null;
+      let timeLeft = 60;
+      let correct = 0;
+      let incorrect = 0;
+      let total = 0;
+      let currentProblem = null;
+      let resultsLog = [];
+      let isShowingAnswer = false;
+
+      function updateLanguage() {
+        const t = LOCALE[lang];
+        titleEl.textContent = t.title;
+        subtitleEl.textContent = t.subtitle;
+        labelLevelEl.textContent = t.labelLevel;
+        labelOperationEl.textContent = t.labelOperation;
+        labelTimeEl.textContent = t.labelTime;
+        labelCorrectEl.textContent = t.labelCorrect;
+        labelIncorrectEl.textContent = t.labelIncorrect;
+        labelTotalEl.textContent = t.labelTotal;
+        historyTitleEl.textContent = t.historyTitle;
+        btnEasy.textContent = t.btnEasy;
+        btnMedium.textContent = t.btnMedium;
+        btnHard.textContent = t.btnHard;
+        btnOpAll.textContent = t.btnAll;
+        btn30.textContent = t.btn30;
+        btn60.textContent = t.btn60;
+        btn90.textContent = t.btn90;
+        startBtn.textContent = t.startBtn;
+        resetBtn.textContent = t.resetBtn;
+        rightBtn.innerHTML = t.rightBtn;
+        wrongBtn.innerHTML = t.wrongBtn;
+        langToggle.textContent = t.langToggle;
+
+        if (resultsLog.length === 0) {
+          resultsEl.innerHTML = `<div class="result-line">${t.resultStart}</div>`;
+        }
+      }
+
+      langToggle.addEventListener('click', () => {
+        lang = lang === 'en' ? 'ru' : 'en';
+        updateLanguage();
+      });
+
+      [btnEasy, btnMedium, btnHard].forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (timer) return;
+          [btnEasy, btnMedium, btnHard].forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          level = btn.dataset.level;
+        });
+      });
+
+      opButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (timer) return;
+          opButtons.forEach(b => {
+            const active = b === btn;
+            b.classList.toggle('active', active);
+            b.setAttribute('aria-pressed', String(active));
+          });
+          operation = btn.dataset.operation;
+        });
+      });
+
+      [btn30, btn60, btn90].forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (timer) return;
+          [btn30, btn60, btn90].forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          duration = parseInt(btn.dataset.seconds);
+          timeLeft = duration;
+          timerEl.textContent = timeLeft;
+        });
+      });
+
+      function generateProblem() {
+        let a, b, op, answer;
+        if (level === 'easy') {
+          if (operation === '*' || operation === '/') {
+            b = Math.floor(Math.random() * 12) + 1;
+            const other = Math.floor(Math.random() * Math.floor(12 / b)) + 1;
+            op = operation;
+            if (op === '*') {
+              a = other;
+              answer = a * b;
+            } else {
+              a = b * other;
+              answer = other;
+            }
+          } else {
+            const choices = operation === 'all' ? EASY_PROBLEMS_EN : EASY_PROBLEMS_EN.filter(p => p.op === operation);
+            const p = choices[Math.floor(Math.random() * choices.length)];
+            ({ a, b, op, answer } = p);
+          }
+        } else if (level === 'medium') {
+          if (operation === '/') {
+            op = '/';
+            answer = Math.floor(Math.random() * 8) + 13;
+            b = Math.floor(Math.random() * 8) + 2;
+            a = b * answer;
+          } else {
+            // Генерируем ПОКА не получим ответ в [13, 20]
+            let attempts = 0;
+            do {
+              op = operation === 'all' ? ['+', '-', '*'][Math.floor(Math.random() * 3)] : operation;
+              a = Math.floor(Math.random() * 20) + 1; // 1–20
+              b = Math.floor(Math.random() * 20) + 1; // 1–20
+
+              if (op === '-') {
+                if (a < b) [a, b] = [b, a];
+                answer = a - b;
+              } else if (op === '+') {
+                answer = a + b;
+              } else { // '*'
+                answer = a * b;
+              }
+              attempts++;
+            } while ((answer < 13 || answer > 20) && attempts < 100);
+
+            // На случай неудачи — подстраховка с выбранным действием.
+            if (answer < 13 || answer > 20) {
+              if (operation === '-') {
+                a = 20; b = 5; op = '-'; answer = 15;
+              } else if (operation === '*') {
+                a = 4; b = 4; op = '*'; answer = 16;
+              } else {
+                a = 13; b = 5; op = '+'; answer = 18;
+              }
+            }
+          }
+        } else { // hard
+          const ops = ['+', '-', '*', '/'];
+          op = operation === 'all' ? ops[Math.floor(Math.random() * 4)] : operation;
+
+          if (op === '/') {
+            b = Math.floor(Math.random() * 9) + 1;
+            const k = Math.floor(Math.random() * 7) + 1;
+            a = b * k;
+            answer = k;
+          } else if (op === '*') {
+            a = Math.floor(Math.random() * 20) + 1;
+            const bMax = Math.floor(100 / a);
+            b = Math.floor(Math.random() * bMax) + 1;
+            answer = a * b;
+          } else {
+            a = Math.floor(Math.random() * 50) + 1;
+            b = Math.floor(Math.random() * 50) + 1;
+
+            if (op === '-') {
+              if (a < b) [a, b] = [b, a];
+              answer = a - b;
+            } else { // '+'
+              answer = a + b;
+            }
+          }
+        }
+
+        const displayOp = op === '*' ? '×' : op === '/' ? '÷' : op;
+        return { expr: `${a} ${displayOp} ${b}`, a, b, op, answer };
+      }
+
+      function showProblem() {
+        if (!timer) return;
+        isShowingAnswer = false;
+        currentProblem = generateProblem();
+        problemEl.textContent = currentProblem.expr + ' = ?';
+        rightBtn.disabled = false;
+        wrongBtn.disabled = false;
+      }
+
+      function showAnswer(isUserRight) {
+        if (isShowingAnswer) return;
+        isShowingAnswer = true;
+
+        const t = LOCALE[lang];
+        if (isUserRight) {
+          correct++;
+          resultsLog.push({ expr: currentProblem.expr + t.resultCorrect.replace('{ans}', currentProblem.answer), status: 'correct' });
+        } else {
+          incorrect++;
+          resultsLog.push({ expr: currentProblem.expr + t.resultIncorrect.replace('{ans}', currentProblem.answer), status: 'incorrect' });
+        }
+        total = correct + incorrect;
+        updateStats();
+        updateResults();
+
+        const symbol = isUserRight ? '✔' : '✗';
+        const color = isUserRight ? '#047857' : '#b91c1c';
+        problemEl.innerHTML = `<span style="color:${color}">${currentProblem.expr} = ${currentProblem.answer} ${symbol}</span>`;
+
+        rightBtn.disabled = true;
+        wrongBtn.disabled = true;
+
+        if (timeLeft > 0) setTimeout(() => { if (timer) showProblem(); }, 900);
+      }
+
+      function updateStats() {
+        correctEl.textContent = correct;
+        incorrectEl.textContent = incorrect;
+        totalEl.textContent = total;
+      }
+
+      function updateResults() {
+        resultsEl.innerHTML = '';
+        const recent = resultsLog.slice(-10);
+        if (recent.length === 0) {
+          resultsEl.innerHTML = `<div class="result-line">${LOCALE[lang].resultStart}</div>`;
+          return;
+        }
+        recent.forEach(item => {
+          const line = document.createElement('div');
+          line.className = `result-line ${item.status}`;
+          line.textContent = item.expr;
+          resultsEl.prepend(line);
+        });
+      }
+
+      startBtn.addEventListener('click', () => {
+        if (timer) return;
+
+        correct = 0; incorrect = 0; total = 0; resultsLog = [];
+        updateStats(); updateResults();
+
+        timeLeft = duration;
+        timerEl.textContent = timeLeft;
+
+        timer = setInterval(() => {
+          timeLeft--;
+          timerEl.textContent = timeLeft;
+          if (timeLeft <= 0) endQuiz();
+        }, 1000);
+
+        startBtn.disabled = true;
+        showProblem();
+      });
+
+      resetBtn.addEventListener('click', () => endQuiz(true));
+
+      function endQuiz(hardReset = false) {
+        if (timer) clearInterval(timer);
+        timer = null;
+        rightBtn.disabled = true;
+        wrongBtn.disabled = true;
+        problemEl.textContent = '—';
+        startBtn.disabled = false;
+        if (hardReset) {
+          timeLeft = duration;
+          timerEl.textContent = timeLeft;
+          correct = 0; incorrect = 0; total = 0; resultsLog = [];
+          updateStats(); updateResults();
+        }
+      }
+
+      rightBtn.addEventListener('click', () => showAnswer(true));
+      wrongBtn.addEventListener('click', () => showAnswer(false));
+
+      updateLanguage();
+      timerEl.textContent = duration;
+    });
+  </script>
+</body>
+</html>
