@@ -9,14 +9,15 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="preload" as="image" href="images/winter-arena.jpg">
 
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     /* ✅ ГДЕ ПОМЕНЯТЬ ФОН СТРАНИЦЫ:
-       просто замени путь на свою картинку (у тебя сейчас images/winter-arena.png) */
+       просто замени путь на свою картинку (у тебя сейчас images/winter-arena.jpg) */
     :root{
-      --BACKGROUND_IMAGE: url('images/winter-arena.png');
+      --BACKGROUND_IMAGE: url('images/winter-arena.jpg');
       --OVERLAY_WHITE: rgba(255,255,255,0.30);
 
       --btnShadow: 0 10px 18px rgba(0,0,0,.16), 0 3px 0 rgba(0,0,0,.14);
@@ -377,16 +378,16 @@
       <!-- 🛡️ 4 герба домов -->
       <div class="house-row" aria-label="Hogwarts Houses">
         <div class="house-badge" title="Гриффиндор">
-          <img alt="Гриффиндор" src="images/gryffindor.png">
+          <img alt="Гриффиндор" src="images/gryffindor.jpg" width="256" height="256" decoding="async">
         </div>
         <div class="house-badge" title="Слизерин">
-          <img alt="Слизерин" src="images/slytherin.png">
+          <img alt="Слизерин" src="images/slytherin.jpg" width="256" height="256" decoding="async">
         </div>
         <div class="house-badge" title="Хаффлпафф">
-          <img alt="Хаффлпафф" src="images/hufflepuff.png">
+          <img alt="Хаффлпафф" src="images/hufflepuff.jpg" width="256" height="256" decoding="async">
         </div>
         <div class="house-badge" title="Рэйвенкло">
-          <img alt="Рэйвенкло" src="images/ravenclaw.png">
+          <img alt="Рэйвенкло" src="images/ravenclaw.jpg" width="256" height="256" decoding="async">
         </div>
       </div>
 
