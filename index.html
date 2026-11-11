@@ -82,7 +82,7 @@
       height: min(940px, 96vh);
       display: flex;
       flex-direction: column;
-      gap: 12px;
+      gap: 8px;
 
       text-align: center;
       background: rgba(255, 255, 255, 0.94);
@@ -127,9 +127,9 @@
     .subtitle { font-size: 1.05rem; color: #334155; opacity: .85; }
 
     .content {
-      flex: 1 1 auto;
+      flex: 1 0 auto;
       display: grid;
-      grid-template-rows: auto 1fr;
+      grid-template-rows: max-content minmax(130px, 1fr);
       gap: 12px;
       min-height: 0;
     }
@@ -145,8 +145,9 @@
     .section.play {
       display: grid;
       grid-template-rows: auto auto auto auto auto;
-      gap: 10px;
+      gap: 8px;
       align-content: start;
+      min-height: max-content;
     }
 
     .controls {
@@ -218,18 +219,51 @@
       text-shadow: 0 1px 0 rgba(0,0,0,.22);
     }
 
-    .diff-btn, .op-btn, .time-btn {
+    .mode-btn, .diff-btn, .op-btn, .time-btn {
       background: linear-gradient(180deg, #f1f5f9 0%, #cbd5e1 100%);
       color: #0f172a;
       text-shadow: 0 1px 0 rgba(255,255,255,.45);
     }
-    .diff-btn.active, .op-btn.active, .time-btn.active {
+    .mode-btn.active, .diff-btn.active, .op-btn.active, .time-btn.active {
       background: linear-gradient(180deg, #93c5fd 0%, #2563eb 100%);
       color: white;
       text-shadow: 0 1px 0 rgba(0,0,0,.25);
     }
     .op-btn { min-width: 50px; }
     #btn-op-all { min-width: 76px; }
+
+    [hidden] { display: none !important; }
+    .mode-picker { flex: 0 0 auto; }
+    .mode-picker label { display: block; margin-bottom: 3px; font-size: .95rem; font-weight: 700; color: #334155; }
+    .mode-picker .btn-group { gap: 7px; }
+    .mode-btn { min-width: 0; padding: 9px 14px; }
+    .section.practice {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 18px;
+      min-height: 260px;
+    }
+    .practice h2 { font-size: clamp(1.2rem, 2.5vw, 1.65rem); }
+    .practice p { color: #475569; }
+    .practice-output {
+      width: min(100%, 570px);
+      min-height: 105px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(248,250,252,.95);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.70), 0 6px 14px rgba(0,0,0,.06);
+      font-size: clamp(2.2rem, 6vw, 4rem);
+      font-weight: 700;
+    }
+    .practice-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+    #drawBtn { color: #fff; background: linear-gradient(180deg, #34d399 0%, #059669 100%); }
+    #revealBtn { color: #fff; background: linear-gradient(180deg, #60a5fa 0%, #2563eb 100%); }
 
     #timer {
       font-size: 2rem;
@@ -359,6 +393,7 @@
       .btn-group { gap: 6px; }
       .diff-btn, .time-btn { min-width: 86px; }
       .op-btn { min-width: 44px; padding: 10px; }
+      .mode-btn { font-size: .85rem; padding: 9px 10px; }
       #btn-op-all { min-width: 64px; }
       #rightBtn, #wrongBtn { width: calc(50% - 6px); min-width: 0; padding: 12px 8px; }
       .stats { flex-wrap: nowrap; gap: 6px; }
@@ -396,7 +431,16 @@
         <p id="subtitle" class="subtitle">Train your math intuition — Right or Wrong?</p>
       </div>
 
-      <div class="content">
+      <div class="mode-picker">
+        <label id="label-game">Game</label>
+        <div class="btn-group" role="group" aria-labelledby="label-game">
+          <button class="mode-btn active" data-mode="quiz" id="mode-quiz" aria-pressed="true">Math quiz</button>
+          <button class="mode-btn" data-mode="number" id="mode-number" aria-pressed="false">Random number</button>
+          <button class="mode-btn" data-mode="times5" id="mode-times5" aria-pressed="false">Times 5</button>
+        </div>
+      </div>
+
+      <div class="content" id="quiz-content">
         <div class="section play">
           <div class="controls">
             <div>
@@ -465,6 +509,16 @@
           </div>
         </div>
       </div>
+
+      <div class="section practice" id="practice-content" hidden>
+        <h2 id="practice-title">Random number up to 1000</h2>
+        <p id="practice-hint">Press the button to get a number.</p>
+        <div id="practice-output" class="practice-output" aria-live="polite">—</div>
+        <div class="practice-actions">
+          <button id="drawBtn">New number</button>
+          <button id="revealBtn" hidden disabled>Show answer</button>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -500,10 +554,33 @@
         }
       }
 
+      const MEDIUM_PROBLEMS = [];
+      for (let a = 1; a <= 20; a++) {
+        for (let b = 1; b <= 20; b++) {
+          for (const [op, answer] of [['+', a + b], ['-', a - b], ['*', a * b]]) {
+            if (answer >= 13 && answer <= 20) MEDIUM_PROBLEMS.push({ a, b, op, answer });
+          }
+        }
+      }
+      for (let answer = 13; answer <= 20; answer++) {
+        for (let b = 2; b <= 9; b++) MEDIUM_PROBLEMS.push({ a: answer * b, b, op: '/', answer });
+      }
+
       const LOCALE = {
         en: {
           title: "Math Practice Drills",
           subtitle: "Train your math intuition — Right or Wrong?",
+          labelGame: "Game",
+          modeQuiz: "Math quiz",
+          modeNumber: "Random number",
+          modeTimes5: "Times 5",
+          numberTitle: "Random number up to 1000",
+          numberHint: "Press the button to get a number.",
+          times5Title: "5 times table",
+          times5Hint: "Solve 5 × 1 through 5 × 11, then reveal the answer.",
+          drawNumber: "New number",
+          drawTimes5: "New example",
+          reveal: "Show answer",
           labelLevel: "Difficulty",
           labelOperation: "Operation",
           labelTime: "Duration",
@@ -530,6 +607,17 @@
         ru: {
           title: "Тренировка математики",
           subtitle: "Оценивайте — Верно или Неверно — и развивайте интуицию",
+          labelGame: "Игра",
+          modeQuiz: "Математический квиз",
+          modeNumber: "Случайное число",
+          modeTimes5: "Таблица на 5",
+          numberTitle: "Случайное число до 1000",
+          numberHint: "Нажмите кнопку, чтобы получить число.",
+          times5Title: "Таблица умножения на 5",
+          times5Hint: "Решите пример от 5 × 1 до 5 × 11 и откройте ответ.",
+          drawNumber: "Новое число",
+          drawTimes5: "Новый пример",
+          reveal: "Показать ответ",
           labelLevel: "Уровень",
           labelOperation: "Действие",
           labelTime: "Время",
@@ -558,6 +646,15 @@
       const langToggle = document.getElementById('langToggle');
       const titleEl = document.getElementById('title');
       const subtitleEl = document.getElementById('subtitle');
+      const labelGameEl = document.getElementById('label-game');
+      const modeButtons = [...document.querySelectorAll('.mode-btn')];
+      const quizContentEl = document.getElementById('quiz-content');
+      const practiceContentEl = document.getElementById('practice-content');
+      const practiceTitleEl = document.getElementById('practice-title');
+      const practiceHintEl = document.getElementById('practice-hint');
+      const practiceOutputEl = document.getElementById('practice-output');
+      const drawBtn = document.getElementById('drawBtn');
+      const revealBtn = document.getElementById('revealBtn');
       const labelLevelEl = document.getElementById('label-level');
       const labelOperationEl = document.getElementById('label-operation');
       const labelTimeEl = document.getElementById('label-time');
@@ -585,6 +682,7 @@
       const resultsEl = document.getElementById('results');
 
       let lang = 'en';
+      let mode = 'quiz';
       let level = 'easy';
       let operation = 'all';
       let duration = 60;
@@ -596,11 +694,40 @@
       let currentProblem = null;
       let resultsLog = [];
       let isShowingAnswer = false;
+      let lastNumber = null;
+      let times5Bag = [];
+      let times5Factor = null;
+      let times5Revealed = false;
+      let mediumAnswerBag = [];
+      let recentAnswers = [];
+      let recentExpressions = [];
+      let nextProblemTimeout = null;
+
+      function shuffle(items) {
+        for (let i = items.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [items[i], items[j]] = [items[j], items[i]];
+        }
+        return items;
+      }
+
+      function updatePracticeText() {
+        const t = LOCALE[lang];
+        practiceTitleEl.textContent = mode === 'times5' ? t.times5Title : t.numberTitle;
+        practiceHintEl.textContent = mode === 'times5' ? t.times5Hint : t.numberHint;
+        drawBtn.textContent = mode === 'times5' ? t.drawTimes5 : t.drawNumber;
+        revealBtn.textContent = t.reveal;
+      }
 
       function updateLanguage() {
         const t = LOCALE[lang];
         titleEl.textContent = t.title;
         subtitleEl.textContent = t.subtitle;
+        labelGameEl.textContent = t.labelGame;
+        document.getElementById('mode-quiz').textContent = t.modeQuiz;
+        document.getElementById('mode-number').textContent = t.modeNumber;
+        document.getElementById('mode-times5').textContent = t.modeTimes5;
+        updatePracticeText();
         labelLevelEl.textContent = t.labelLevel;
         labelOperationEl.textContent = t.labelOperation;
         labelTimeEl.textContent = t.labelTime;
@@ -631,12 +758,59 @@
         updateLanguage();
       });
 
+      modeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (mode === btn.dataset.mode) return;
+          endQuiz(true);
+          mode = btn.dataset.mode;
+          modeButtons.forEach(b => {
+            const active = b === btn;
+            b.classList.toggle('active', active);
+            b.setAttribute('aria-pressed', String(active));
+          });
+          quizContentEl.hidden = mode !== 'quiz';
+          practiceContentEl.hidden = mode === 'quiz';
+          practiceOutputEl.textContent = '—';
+          revealBtn.hidden = mode !== 'times5';
+          revealBtn.disabled = true;
+          times5Factor = null;
+          times5Revealed = false;
+          updatePracticeText();
+        });
+      });
+
+      drawBtn.addEventListener('click', () => {
+        if (mode === 'number') {
+          let number;
+          do { number = Math.floor(Math.random() * 1000) + 1; } while (number === lastNumber);
+          lastNumber = number;
+          practiceOutputEl.textContent = number;
+        } else if (mode === 'times5') {
+          if (times5Bag.length === 0) {
+            times5Bag = shuffle(Array.from({ length: 11 }, (_, i) => i + 1));
+            if (times5Bag[10] === times5Factor) [times5Bag[9], times5Bag[10]] = [times5Bag[10], times5Bag[9]];
+          }
+          times5Factor = times5Bag.pop();
+          times5Revealed = false;
+          practiceOutputEl.textContent = `5 × ${times5Factor} = ?`;
+          revealBtn.disabled = false;
+        }
+      });
+
+      revealBtn.addEventListener('click', () => {
+        if (mode !== 'times5' || times5Factor === null || times5Revealed) return;
+        times5Revealed = true;
+        practiceOutputEl.textContent = `5 × ${times5Factor} = ${5 * times5Factor}`;
+        revealBtn.disabled = true;
+      });
+
       [btnEasy, btnMedium, btnHard].forEach(btn => {
         btn.addEventListener('click', () => {
           if (timer) return;
           [btnEasy, btnMedium, btnHard].forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           level = btn.dataset.level;
+          mediumAnswerBag = [];
         });
       });
 
@@ -649,6 +823,7 @@
             b.setAttribute('aria-pressed', String(active));
           });
           operation = btn.dataset.operation;
+          mediumAnswerBag = [];
         });
       });
 
@@ -662,6 +837,25 @@
           timerEl.textContent = timeLeft;
         });
       });
+
+      function generateMediumProblem() {
+        const candidates = MEDIUM_PROBLEMS.filter(p => operation === 'all' || p.op === operation);
+        if (mediumAnswerBag.length === 0) {
+          const answers = [...new Set(candidates.map(p => p.answer))];
+          const recent = recentAnswers.slice(-3);
+          mediumAnswerBag = [
+            ...shuffle(answers.filter(answer => recent.includes(answer))),
+            ...shuffle(answers.filter(answer => !recent.includes(answer)))
+          ];
+        }
+        const answer = mediumAnswerBag.pop();
+        const sameAnswer = candidates.filter(p => p.answer === answer);
+        const availableOps = [...new Set(sameAnswer.map(p => p.op))];
+        const op = availableOps[Math.floor(Math.random() * availableOps.length)];
+        const sameOperation = sameAnswer.filter(p => p.op === op);
+        const fresh = sameOperation.filter(p => !recentExpressions.includes(`${p.a} ${p.op} ${p.b}`));
+        return (fresh.length ? fresh : sameOperation)[Math.floor(Math.random() * (fresh.length || sameOperation.length))];
+      }
 
       function generateProblem() {
         let a, b, op, answer;
@@ -683,41 +877,7 @@
             ({ a, b, op, answer } = p);
           }
         } else if (level === 'medium') {
-          if (operation === '/') {
-            op = '/';
-            answer = Math.floor(Math.random() * 8) + 13;
-            b = Math.floor(Math.random() * 8) + 2;
-            a = b * answer;
-          } else {
-            // Генерируем ПОКА не получим ответ в [13, 20]
-            let attempts = 0;
-            do {
-              op = operation === 'all' ? ['+', '-', '*'][Math.floor(Math.random() * 3)] : operation;
-              a = Math.floor(Math.random() * 20) + 1; // 1–20
-              b = Math.floor(Math.random() * 20) + 1; // 1–20
-
-              if (op === '-') {
-                if (a < b) [a, b] = [b, a];
-                answer = a - b;
-              } else if (op === '+') {
-                answer = a + b;
-              } else { // '*'
-                answer = a * b;
-              }
-              attempts++;
-            } while ((answer < 13 || answer > 20) && attempts < 100);
-
-            // На случай неудачи — подстраховка с выбранным действием.
-            if (answer < 13 || answer > 20) {
-              if (operation === '-') {
-                a = 20; b = 5; op = '-'; answer = 15;
-              } else if (operation === '*') {
-                a = 4; b = 4; op = '*'; answer = 16;
-              } else {
-                a = 13; b = 5; op = '+'; answer = 18;
-              }
-            }
-          }
+          ({ a, b, op, answer } = generateMediumProblem());
         } else { // hard
           const ops = ['+', '-', '*', '/'];
           op = operation === 'all' ? ops[Math.floor(Math.random() * 4)] : operation;
@@ -752,7 +912,19 @@
       function showProblem() {
         if (!timer) return;
         isShowingAnswer = false;
-        currentProblem = generateProblem();
+        if (level === 'medium') {
+          currentProblem = generateProblem();
+        } else {
+          for (let attempt = 0; attempt < 100; attempt++) {
+            currentProblem = generateProblem();
+            if (!recentAnswers.slice(-3).includes(currentProblem.answer) &&
+                !recentExpressions.includes(`${currentProblem.a} ${currentProblem.op} ${currentProblem.b}`)) break;
+          }
+        }
+        recentAnswers.push(currentProblem.answer);
+        recentAnswers = recentAnswers.slice(-3);
+        recentExpressions.push(`${currentProblem.a} ${currentProblem.op} ${currentProblem.b}`);
+        recentExpressions = recentExpressions.slice(-8);
         problemEl.textContent = currentProblem.expr + ' = ?';
         rightBtn.disabled = false;
         wrongBtn.disabled = false;
@@ -781,7 +953,7 @@
         rightBtn.disabled = true;
         wrongBtn.disabled = true;
 
-        if (timeLeft > 0) setTimeout(() => { if (timer) showProblem(); }, 900);
+        if (timeLeft > 0) nextProblemTimeout = setTimeout(() => { if (timer) showProblem(); }, 900);
       }
 
       function updateStats() {
@@ -809,6 +981,7 @@
         if (timer) return;
 
         correct = 0; incorrect = 0; total = 0; resultsLog = [];
+        mediumAnswerBag = []; recentAnswers = []; recentExpressions = [];
         updateStats(); updateResults();
 
         timeLeft = duration;
@@ -828,6 +1001,8 @@
 
       function endQuiz(hardReset = false) {
         if (timer) clearInterval(timer);
+        if (nextProblemTimeout) clearTimeout(nextProblemTimeout);
+        nextProblemTimeout = null;
         timer = null;
         rightBtn.disabled = true;
         wrongBtn.disabled = true;
